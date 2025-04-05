@@ -59,7 +59,35 @@ def filtriraj_z_gaussovim_jedrom(slika, sigma):
 
 def filtriraj_sobel_smer(slika):
     '''Filtrira sliko z Sobelovim jedrom in označi gradiente v orignalni sliki glede na ustrezen pogoj.'''
-    pass
+    # Pretvori sliko v sivinsko, če je barvna
+    if len(slika.shape) > 2:
+        siva = np.mean(slika, axis=-1)
+    else:
+        siva = slika
+
+    # Definiraj Sobelova jedra
+    sobel_x = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]])
+    sobel_y = np.array([[-1, -2, -1], [0, 0, 0], [1, 2, 1]])
+
+    # Izračunaj gradient v x in y smeri
+    gradient_x = konvolucija(siva, sobel_x)
+    gradient_y = konvolucija(siva, sobel_y)
+
+    # Izračunaj magnitudo gradienta
+    magnituda = np.sqrt(np.square(gradient_x) + np.square(gradient_y))
+
+    # Spremeni barvo pikslov z magnitudo večjo od 100 na rdečo
+    filtrirana_slika = slika.copy()
+    rdeca_barva = [0, 0, 255]  # BGR za rdečo barvo (OpenCV uporablja BGR)
+    visina, sirina = magnituda.shape
+
+    for i in range(visina):
+        for j in range(sirina):
+            if magnituda[i, j] > 100:
+                filtrirana_slika[i, j] = rdeca_barva
+
+    return filtrirana_slika
+
 
 if __name__ == '__main__':
     # Nalozim lenna sliko
@@ -72,7 +100,7 @@ if __name__ == '__main__':
     slika = np.float32(slika)
     
     # Testirajmo funkcijo filtriranje z gaussovim jedrom z razlicnimi sigmami
-    sigma_vrednosti = [0.5, 1.0, 2.0, 10.0]
+    sigma_vrednosti = [0.5, 1.0, 2.0, 3.0]
     
     # Prvo pokaze originalno sliko
     cv.imshow("Originalna slika", np.uint8(slika))
@@ -91,6 +119,19 @@ if __name__ == '__main__':
         velikost_jedra = int((2 * sigma) * 2 + 1)
         print(f"Sigma: {sigma}, Velikost jedra: {velikost_jedra}x{velikost_jedra}")
     
+    # Naložimo barvno sliko za Sobelov filter
+    barvna_slika = cv.imread(".utils/lenna.png")
+    if barvna_slika is None:
+        print("Napaka pri nalaganju barvne slike!")
+        exit()
+    
+    # Uporabimo funkcijo filtriraj_sobel_smer
+    filtrirana_sobel = filtriraj_sobel_smer(barvna_slika)
+    
+    # Prikažemo sliko s poudarjenimi gradienti
+    cv.imshow("Original sobel slika", filtrirana_sobel)
+    
     cv.waitKey(0)
     cv.destroyAllWindows()
+
 
