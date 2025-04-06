@@ -12,25 +12,23 @@ def konvolucija(slika, jedro):
     v_odmik = v_jedra // 2
     s_odmik = s_jedra // 2
 
+    # Razširimo sliko z ničlami na robovih (padding)
+    razsirjena_slika = np.pad(slika, ((v_odmik, v_odmik), (s_odmik, s_odmik)), mode='constant', constant_values=0)
+
     # Inicializacija izhodne slike
     rezultat = np.zeros_like(slika, dtype=np.float32)
 
-    # Izvedba konvolucije
+    # Konvolucija z vektorskim racunanjem
     for i in range(visina):
         for j in range(sirina):
-            vrednost = 0
-            for k in range(v_jedra):
-                for l in range(s_jedra):
-                    v_index = i + (k - v_odmik)
-                    s_index = j + (l - s_odmik)
-
-                    # Preveri, če je indeks znotraj meja slike
-                    if 0 <= v_index < visina and 0 <= s_index < sirina:
-                        vrednost += slika[v_index, s_index] * jedro[k, l]
-
-            rezultat[i, j] = vrednost
+            # Za vsak piksel izrežemo okno iz razširjene slike
+            okno_slike = razsirjena_slika[i:i+v_jedra, j:j+s_jedra]
+            
+            # Izračunamo vrednost konvolucije kot vsoto produkta okna in jedra
+            rezultat[i, j] = np.sum(okno_slike * jedro)
 
     return rezultat
+
 
 
 def filtriraj_z_gaussovim_jedrom(slika, sigma):
@@ -78,7 +76,7 @@ def filtriraj_sobel_smer(slika):
 
     # Spremeni barvo pikslov z magnitudo večjo od 100 na rdečo
     filtrirana_slika = slika.copy()
-    rdeca_barva = [0, 0, 255]  # BGR za rdečo barvo (OpenCV uporablja BGR)
+    rdeca_barva = [0, 0, 255]
     visina, sirina = magnituda.shape
 
     for i in range(visina):
@@ -179,14 +177,14 @@ if __name__ == '__main__':
     sobel_s_sumom = filtriraj_sobel_smer(barvna_slika_s_sumom)
     cv.imshow("Sobel filter na barvni sliki s šumom (brez glajenja)", sobel_s_sumom)
 
-    # Pretvorimo barvno sliko s šumom v sivinsko za Gaussov filter
+    # Pretvorimo barvno sliko s šumom v sivinsko za Gaussov filter, ker je funkcija implementirana v 2D in ne 3D za barvno
     siva_slika_s_sumom = cv.cvtColor(barvna_slika_s_sumom, cv.COLOR_BGR2GRAY).astype(np.float32)
 
     # Zgladimo sivinsko sliko s šumom z Gaussovim filtrom
-    sigma_za_glajenje = 1.0  # Srednja vrednost sigme za glajenje
+    sigma_za_glajenje = 1.0
     zglajena_siva_slika = filtriraj_z_gaussovim_jedrom(siva_slika_s_sumom, sigma_za_glajenje)
 
-    # Pretvorimo zglajeno sivinsko sliko nazaj v barvno
+    # Pretvorimo zglajeno sivinsko sliko nazaj v barvno da lahko uporabimo funkcijo sobel, čeprav je siva ker se izgubijo podatki
     zglajena_barvna_slika = cv.cvtColor(np.uint8(np.clip(zglajena_siva_slika, 0, 255)), cv.COLOR_GRAY2BGR)
 
     # Prikažemo zglajeno sliko
