@@ -154,6 +154,48 @@ if __name__ == '__main__':
     cv.imshow("Sobel filter - temna slika", sobel_temna)
     cv.imshow("Sobel filter - svetla slika", sobel_svetla)
 
+     # Vprašanje 2: Zakaj je pred uporabo detektorja robov smiselno uporabiti filter za glajenje?
+    # Naložimo barvno sliko
+    barvna_slika_za_sum = cv.imread(".utils/lenna.png")
+    if barvna_slika_za_sum is None:
+        print("Napaka pri nalaganju barvne slike za šum!")
+        exit()
+
+    # Ustvarimo kopijo za dodajanje šuma
+    barvna_slika_s_sumom = barvna_slika_za_sum.copy()
+
+    # Dodamo šum na barvno sliko
+    np.random.seed(42)  # Za ponovljivost rezultatov
+    for i in range(10000):
+        x = np.random.randint(0, barvna_slika_s_sumom.shape[1])
+        y = np.random.randint(0, barvna_slika_s_sumom.shape[0])
+        kanal = np.random.randint(0, 3)
+        barvna_slika_s_sumom[y, x, kanal] = 255  # Dodamo bel šum na naključen kanal
+
+    # Prikažemo barvno sliko s šumom
+    cv.imshow("Barvna slika s šumom", barvna_slika_s_sumom)
+
+    # Uporabimo Sobelov filter direktno na barvni sliki s šumom
+    sobel_s_sumom = filtriraj_sobel_smer(barvna_slika_s_sumom)
+    cv.imshow("Sobel filter na barvni sliki s šumom (brez glajenja)", sobel_s_sumom)
+
+    # Pretvorimo barvno sliko s šumom v sivinsko za Gaussov filter
+    siva_slika_s_sumom = cv.cvtColor(barvna_slika_s_sumom, cv.COLOR_BGR2GRAY).astype(np.float32)
+
+    # Zgladimo sivinsko sliko s šumom z Gaussovim filtrom
+    sigma_za_glajenje = 1.0  # Srednja vrednost sigme za glajenje
+    zglajena_siva_slika = filtriraj_z_gaussovim_jedrom(siva_slika_s_sumom, sigma_za_glajenje)
+
+    # Pretvorimo zglajeno sivinsko sliko nazaj v barvno
+    zglajena_barvna_slika = cv.cvtColor(np.uint8(np.clip(zglajena_siva_slika, 0, 255)), cv.COLOR_GRAY2BGR)
+
+    # Prikažemo zglajeno sliko
+    cv.imshow(f"Zglajena barvna slika (sigma={sigma_za_glajenje})", zglajena_barvna_slika)
+
+    # Uporabimo Sobelov filter na zglajeni sliki
+    sobel_zglajena = filtriraj_sobel_smer(zglajena_barvna_slika)
+    cv.imshow("Sobel filter na zglajeni sliki", sobel_zglajena)
+
     
     cv.waitKey(0)
     cv.destroyAllWindows()
