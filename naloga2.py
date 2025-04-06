@@ -131,6 +131,30 @@ if __name__ == '__main__':
     # Prikažemo sliko s poudarjenimi gradienti
     cv.imshow("Original sobel slika", filtrirana_sobel)
     
+    # Vprašanje 1: Primerjava detekcije robov na temni in svetli sliki
+    # Nalozim barvno sliko za primerjavo
+    primerjava_slika = cv.imread(".utils/lenna.png")
+    if primerjava_slika is None:
+        print("Napaka pri nalaganju slike za primerjavo!")
+        exit()
+    
+    # Ustvarimo temno in svetlo verzijo slike
+    temna_slika = np.clip(primerjava_slika * 0.3, 0, 255).astype(np.uint8)
+    svetla_slika = np.clip(primerjava_slika * 2.0, 0, 255).astype(np.uint8)
+    
+    # Prikazemo temno in svetlo sliko
+    cv.imshow("Temna slika (30% svetlosti)", temna_slika)
+    cv.imshow("Svetla slika (200% svetlosti)", svetla_slika)
+    
+    # Uporabimo Sobelov filter na temni in svetli sliki
+    sobel_temna = filtriraj_sobel_smer(temna_slika)
+    sobel_svetla = filtriraj_sobel_smer(svetla_slika)
+    
+    # Prikazemo rezultate detekcije robov
+    cv.imshow("Sobel filter - temna slika", sobel_temna)
+    cv.imshow("Sobel filter - svetla slika", sobel_svetla)
+
+    
     cv.waitKey(0)
     cv.destroyAllWindows()
 
