@@ -49,7 +49,7 @@ def filtriraj_z_gaussovim_jedrom(slika, sigma):
         for j in range(velikost_jedra):
             x = i - k
             y = j - k
-            jedro[i, j] = (1 / (2 * np.pi * sigma**2)) * np.exp(-((i-k-1)**2 + (j-k-1)**2) / (2 * sigma**2))
+            jedro[i, j] = (1 / (2 * np.pi * sigma**2)) * np.exp(-((i-k)**2 + (j-k)**2) / (2 * sigma**2))
 
     
     # Uporabimo prej implementirano funkcijo konvolucija za filtriranje slike
