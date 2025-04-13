@@ -1,0 +1,58 @@
+name: 28536 Testiranje
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  preveri-teste:
+    name: Preveri testne datoteke
+    runs-on: self-hosted
+    outputs:
+      tests-exist: ${{ steps.check-tests.outputs.exists }}
+    steps:
+    - name: Checkout kode
+      uses: actions/checkout@v4
+    
+    - name: Preveri obstoj testov
+      id: check-tests
+      run: |
+        if [ ! -f "test.py" ]; then
+          echo "Napaka: Manjka testna datoteka!" > napaka.txt
+          echo "exists=false" >> $GITHUB_OUTPUT
+          exit 1
+        else
+          echo "exists=true" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Shrani napake (artefakt)
+      if: failure()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-error
+        path: napaka.txt
+
+  izvedi-teste:
+    name: Izvedi teste na matriki Python verzij
+    needs: preveri-teste
+    if: needs.preveri-teste.outputs.tests-exist == 'true'
+    runs-on: self-hosted
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10"]
+    steps:
+    - name: Checkout kode
+      uses: actions/checkout@v4
+    
+    - name: Nastavi Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Namesti odvisnosti
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Poženi teste
+      run: pytest test.py -v
