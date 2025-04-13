@@ -27,7 +27,7 @@ jobs:
 
     - name: Shrani napake (artefakt)
       if: failure()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: test-error
         path: napaka.txt
@@ -44,6 +44,23 @@ jobs:
     - name: Checkout kode
       uses: actions/checkout@v4
     
+    - name: Prenesi napake
+      if: always()
+      uses: actions/download-artifact@v4
+      with:
+        name: test-error
+        path: .
+      continue-on-error: true
+        
+    - name: Pokaži napake
+      if: always()
+      run: |
+        if [ -f "napaka.txt" ]; then
+          echo "*** NAJDENA NAPAKA V PREJŠNJEM KORAKU ***"
+          cat napaka.txt
+          exit 1
+        fi
+
     - name: Nastavi Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
